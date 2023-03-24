@@ -153,71 +153,20 @@
 <p><strong>Slow Refresh Rate Issue:</strong><br>Since our interim result is only temporary, the final result will be provided when the sentence is completed. When the speaker stops talking, the “isFinal” flag is automatically set to true, and the maximum waiting time for the final result will not exceed one second.</p>
 <p><strong>Limitations of Streaming Request:</strong><br>For content transfers, a single request is limited to a maximum of 10MB, which includes audio files, live streams, videos, and more. However, if the files are stored in Cloud Storage, there are no usage restrictions. Streaming Requests, on the other hand, are limited to a duration of five minutes. To overcome this limitation, we can send a new request just before the five-minute mark, thereby avoiding any restrictions.</p>
 <h2 id="DEMO"><a href="#DEMO" class="headerlink" title="DEMO"></a><em>DEMO</em></h2><p>In this demo, we create a recognition configuration and set three fundamental parameters: encoding, Herz, and language. Then, we apply the streaming configuration as shown below.  </p>
-<pre><code># configure RecognitionConfig
-config = speech.RecognitionConfig(
-    encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
-    sample_rate_hertz=SAMPLE_RATE,
-    language_code=&quot;en-US&quot;,
-)
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># configure RecognitionConfig</span></span><br><span class="line">config = speech.RecognitionConfig(</span><br><span class="line">    encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,</span><br><span class="line">    sample_rate_hertz=SAMPLE_RATE,</span><br><span class="line">    language_code=<span class="string">&quot;en-US&quot;</span>,</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment"># passing RecognitionConfig into StreamingRecognitionConfig</span></span><br><span class="line">streaming_config = speech.StreamingRecognitionConfig(</span><br><span class="line">    config=config, interim_results=True</span><br></pre></td></tr></table></figure>
 
-# passing RecognitionConfig into StreamingRecognitionConfig
-streaming_config = speech.StreamingRecognitionConfig(
-    config=config, interim_results=True
-</code></pre>
+
 <p>Next, we generate an audio stream using the mic manager to produce audio frames. Once we generate audio segments, we package the speech content into a request and send it together with the configuration to the API. Upon receiving the request, the API will return a response.</p>
-<pre><code>with mic_manager as stream:
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">with mic_manager as stream:</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> not stream.closed:</span><br><span class="line">        sys.stdout.write(YELLOW)</span><br><span class="line">        sys.stdout.write(</span><br><span class="line">            <span class="string">&quot;\n&quot;</span> + str(STREAMING_LIMIT * stream.restart_counter) + <span class="string">&quot;: NEW REQUEST\n&quot;</span></span><br><span class="line">        )</span><br><span class="line"></span><br><span class="line">        stream.audio_input = []</span><br><span class="line">        audio_generator = stream.generator() <span class="comment"># receive audio content</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># passing audio contents to request </span></span><br><span class="line">        requests = (</span><br><span class="line">            speech.StreamingRecognizeRequest(audio_content=content)</span><br><span class="line">            <span class="keyword">for</span> content <span class="keyword">in</span> audio_generator</span><br><span class="line">        )</span><br><span class="line">        <span class="comment"># calling API request and receive response</span></span><br><span class="line">        responses = client.streaming_recognize(streaming_config, requests)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># process the received responses for output purposes</span></span><br><span class="line">        listen_print_loop(responses, stream)</span><br></pre></td></tr></table></figure>
 
-    while not stream.closed:
-        sys.stdout.write(YELLOW)
-        sys.stdout.write(
-            &quot;\n&quot; + str(STREAMING_LIMIT * stream.restart_counter) + &quot;: NEW REQUEST\n&quot;
-        )
 
-        stream.audio_input = []
-        audio_generator = stream.generator() # receive audio content
 
-        # passing audio contents to request 
-        requests = (
-            speech.StreamingRecognizeRequest(audio_content=content)
-            for content in audio_generator
-        )
-        # calling API request and receive response
-        responses = client.streaming_recognize(streaming_config, requests)
-
-        # process the received responses for output purposes
-        listen_print_loop(responses, stream)
-</code></pre>
 <p>The purpose of the listen print loop is to determine the format of the output. In this string, we translate the text in the response into Chinese.</p>
 <p>Finally, we add the translation part and set the target language to zh-TW, using the Neural Machine Translation (NMT) model, as shown in below.</p>
-<pre><code># translate the transcript into Traditional Chinese using Cloud Translation 
-    # Basic edition
-    if isinstance(transcript, bytes):
-        transcript = transcript.decode(&quot;utf-8&quot;)
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># translate the transcript into Traditional Chinese using Cloud Translation </span></span><br><span class="line">    <span class="comment"># Basic edition</span></span><br><span class="line">    <span class="keyword">if</span> isinstance(transcript, bytes):</span><br><span class="line">        transcript = transcript.decode(<span class="string">&quot;utf-8&quot;</span>)</span><br><span class="line"></span><br><span class="line">    translation = translator.translate(transcript, target_language=<span class="string">&#x27;zh-TW&#x27;</span>, model=<span class="string">&quot;nmt&quot;</span>)</span><br><span class="line">    transcript = translation[<span class="string">&#x27;translatedText&#x27;</span>]</span><br></pre></td></tr></table></figure>
 
-    translation = translator.translate(transcript, target_language=&#39;zh-TW&#39;, model=&quot;nmt&quot;)
-    transcript = translation[&#39;translatedText&#39;]
-</code></pre>
 <p>To overcome the 5-minute live streaming limit, we deduct the start time from the current time. If it exceeds the streaming limit, it will be cut off as shown in below. </p>
-<pre><code> if get_current_time() - stream.start_time &gt; STREAMING_LIMIT:
-        stream.start_time = get_current_time()
-        break
-       
-</code></pre>
-<p>Then, we reset the streaming time to zero and begin a new request as shown in below.</p>
-<pre><code>if stream.result_end_time &gt; 0:
-            stream.final_request_end_time = stream.is_final_end_time
-        stream.result_end_time = 0
-        stream.last_audio_input = []
-        stream.last_audio_input = stream.audio_input
-        stream.audio_input = []
-        stream.restart_counter = stream.restart_counter + 1
-
-        if not stream.last_transcript_was_final:
-            sys.stdout.write(&quot;\n&quot;)
-        # start new stream
-        stream.new_stream = True
-</code></pre>
-
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">     <span class="keyword">if</span> get_current_time() - stream.start_time &gt; STREAMING_LIMIT:</span><br><span class="line">            stream.start_time = get_current_time()</span><br><span class="line">            <span class="built_in">break</span></span><br><span class="line">```        </span><br><span class="line"></span><br><span class="line">Then, we reset the streaming time to zero and begin a new request as shown <span class="keyword">in</span> below.</span><br><span class="line"></span><br><span class="line">``` bash</span><br><span class="line">    <span class="keyword">if</span> stream.result_end_time &gt; 0:</span><br><span class="line">                stream.final_request_end_time = stream.is_final_end_time</span><br><span class="line">            stream.result_end_time = 0</span><br><span class="line">            stream.last_audio_input = []</span><br><span class="line">            stream.last_audio_input = stream.audio_input</span><br><span class="line">            stream.audio_input = []</span><br><span class="line">            stream.restart_counter = stream.restart_counter + 1</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> not stream.last_transcript_was_final:</span><br><span class="line">                sys.stdout.write(<span class="string">&quot;\n&quot;</span>)</span><br><span class="line">            <span class="comment"># start new stream</span></span><br><span class="line">            stream.new_stream = True</span><br></pre></td></tr></table></figure>
 </div> 
 
 <script>
