@@ -108,6 +108,14 @@
     <div class="post-info">
         <div class="tag-list">
             
+                
+                    <span class="post-tag">
+                        <a href="/tags/Google-Cloud-Platform-Translation-Speech-To-Text/">
+                            Google Cloud Platform,Translation,Speech-To-Text
+                        </a>
+                    </span>    
+                           
+            
         </div>
         <div class="post-title">
             
@@ -127,7 +135,49 @@
     </div>
 </div>
     <div class="post-content">
-    
+    <p>In this article, we will be discussing the utilization of Python to run the basic version of Google Cloud’s Speech-to-Text API and Cloud Translation API, achieving real-time language translation effects.</p>
+<p><img src="/1.jpg" alt=" "><br>Photo by <a target="_blank" rel="noopener" href="https://unsplash.com/@rubaitulazad?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Rubaitul Azad</a> on <a target="_blank" rel="noopener" href="https://unsplash.com/photos/qqV7i39Ekj0?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a></p>
+<p>First and foremost, this demo captures audio directly from the computer, uses the Speech-to-Text API to transcribe the audio content into text in real-time, and finally translates the text into our target language using the Cloud Translation API. We can set the desired language for translation, and in this demo, we have set the translation from English to Chinese. Moving forward, we will be discussing the essential functionalities of Speech-to-Text and Translation API.</p>
+<h2 id="𝟭-Speech-to-Text-API"><a href="#𝟭-Speech-to-Text-API" class="headerlink" title="𝟭 Speech-to-Text API:"></a>𝟭 <strong>Speech-to-Text API:</strong></h2><p>The basic version of this API has three main structures, which are RecognizeRequests, RecognizeResponse, and StreamRequest and Response. RecognizeRequests are used to send settings and data to the API for processing. Custom settings can be applied, such as speech-to-text, video-to-text, or file-to-text conversion, including formats like MP4, MP3, WAV, and others. Therefore, optimal results can be achieved by setting according to the user’s needs. After a successful API call, a response is returned, which includes the transcript and confidence level.</p>
+<p>In this article, we will mainly focus on the StreamRequestandResponse parameter, as it is specifically designed for real-time live streaming applications.</p>
+<blockquote>
+<p><strong>Main Configuration Parameters</strong></p>
+</blockquote>
+<p>There are numerous parameters outlined in the official documentation, but this section will highlight five parameters that I consider crucial:</p>
+<ul>
+<li>encoding</li>
+<li>sample_rate_hertz</li>
+<li>language_code</li>
+<li>model</li>
+<li>profanity_filter</li>
+</ul>
+<p>Encoding refers to the method we choose to upload to the API. Sample_rate_hertz is used to set the audio received by our microphone. Language_code refers to the language, such as Chinese, English, Spanish, etc., which can be set to the desired language. Model can be set to the preferred model, as different models may produce different results. For example, longer conversations, shorter commands, voice extracted from phone calls, etc. Profanity_filter is an interesting parameter that filters out sensitive terms, such as profanity and discriminatory language.</p>
+<blockquote>
+<p><strong>Core Settings of Request:</strong></p>
+</blockquote>
+<p><strong>Single Utterance:</strong> This setting detects voice input and automatically ends the request if no input is detected.</p>
+<p>It is typically used for voice commands and is not suitable for live streaming since the speaker is continuously speaking. Therefore, it is set to False to avoid ending the request when the speaker pauses.</p>
+<p><strong>Interim Result:</strong> When speaking, the API returns temporary text which is later refined into a complete sentence after processing more results. To determine if it is the final result, the API provides a flag, “is_final”.</p>
+<p>In this case, “is_final” indicates whether the temporary or final result should be displayed. If “is_final” is False, it represents a temporary result, and when “is_final” is True, it indicates the final result.</p>
+<h2 id="𝟮-Cloud-Translation-API"><a href="#𝟮-Cloud-Translation-API" class="headerlink" title="𝟮 Cloud Translation API"></a>𝟮 <strong>Cloud Translation API</strong></h2><p>The Cloud Translation API basic version utilizes Neural Machine Translation (NMT) models for translation. The advanced version is suitable for larger content such as entire documents, offering batch translation, model customization, and the ability to customize vocabulary for proprietary terms. Additionally, there is the Media Translation API, which allows for live speech translation. While this API is still in beta and has not been officially launched, the user experience is not yet optimal. Currently, it only supports English-to-Chinese translation and has a long wait time for the speech to end before sending a flag.</p>
+<p>In the following paragraph, I will share the difficulties I encountered while learning APIs, which might also be encountered by others. Firstly, there are two factors that affect the latency that impacts our translation speed:</p>
+<h2 id="🦥-Latency-Issue"><a href="#🦥-Latency-Issue" class="headerlink" title="🦥 Latency Issue:"></a>🦥 <strong>Latency Issue:</strong></h2><p>In terms of sampling rate, Google recommends setting it to 16000 Hz to achieve the best result, or setting it to the speaker’s voice frequency. The stream will divide the speech into frames and send them to the Request. The size of frames will affect the latency, and the larger the frames, the greater the latency. Google recommends setting the frame size to 100 milliseconds, as demonstrated in the following demo.</p>
+<p><strong>Slow Refresh Rate Issue:</strong></p>
+<p>Since our interim result is only temporary, the final result will be provided when the sentence is completed. When the speaker stops talking, the “isFinal” flag is automatically set to true, and the maximum waiting time for the final result will not exceed one second.</p>
+<p><strong>Limitations of Streaming Request:</strong></p>
+<p>For content transfers, a single request is limited to a maximum of 10MB, which includes audio files, live streams, videos, and more. However, if the files are stored in Cloud Storage, there are no usage restrictions. Streaming Requests, on the other hand, are limited to a duration of five minutes. To overcome this limitation, we can send a new request just before the five-minute mark, thereby avoiding any restrictions.</p>
+<h2 id="DEMO"><a href="#DEMO" class="headerlink" title="DEMO"></a><em>DEMO</em></h2><p>In this demo, we create a recognition configuration and set three fundamental parameters: encoding, Herz, and language. Then, we apply the streaming configuration as shown below.  </p>
+<p>   <a target="_blank" rel="noopener" href="https://gist.github.com/mimi-030/2a632cf7114e8859cb86626106172fc8.js"> </a></p>
+<p>Next, we generate an audio stream using the mic manager to produce audio frames. Once we generate audio segments, we package the speech content into a request and send it together with the configuration to the API. Upon receiving the request, the API will return a response.</p>
+<p> <a target="_blank" rel="noopener" href="https://gist.github.com/mimi-030/445825c59832f1ab21d1e2df8591e90d.js"> </a></p>
+<p>The purpose of the listen print loop is to determine the format of the output. In this string, we translate the text in the response into Chinese.</p>
+<p>Finally, we add the translation part and set the target language to zh-TW, using the Neural Machine Translation (NMT) model, as shown in below.</p>
+<p>  <a target="_blank" rel="noopener" href="https://gist.github.com/mimi-030/1c11f4a07bcc0bf5a24c589f1d81baa3.js"> </a></p>
+<p>To overcome the 5-minute live streaming limit, we deduct the start time from the current time. If it exceeds the streaming limit, it will be cut off as shown in below. </p>
+<p><a target="_blank" rel="noopener" href="https://gist.github.com/mimi-030/fb30243732ec16c67d958a7b65193072.js"> </a></p>
+<p>Then, we reset the streaming time to zero and begin a new request as shown in below.</p>
+<p><a href="://gist.github.com/mimi-030/fa2c71b0c1328ffae9f5b9623055177c.js"> </a></p>
+
 </div> 
 
 <script>
