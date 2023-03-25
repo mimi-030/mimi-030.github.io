@@ -187,6 +187,16 @@
 
 <p>To overcome the 5-minute live streaming limit, we deduct the start time from the current time. If it exceeds the streaming limit, it will be cut off as shown in below. </p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">     <span class="keyword">if</span> get_current_time() - stream.start_time &gt; STREAMING_LIMIT:</span><br><span class="line">            stream.start_time = get_current_time()</span><br><span class="line">            <span class="built_in">break</span></span><br><span class="line">```        </span><br><span class="line"></span><br><span class="line">Then, we reset the streaming time to zero and begin a new request as shown <span class="keyword">in</span> below.</span><br><span class="line"></span><br><span class="line">``` bash</span><br><span class="line">    <span class="keyword">if</span> stream.result_end_time &gt; 0:</span><br><span class="line">                stream.final_request_end_time = stream.is_final_end_time</span><br><span class="line">            stream.result_end_time = 0</span><br><span class="line">            stream.last_audio_input = []</span><br><span class="line">            stream.last_audio_input = stream.audio_input</span><br><span class="line">            stream.audio_input = []</span><br><span class="line">            stream.restart_counter = stream.restart_counter + 1</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> not stream.last_transcript_was_final:</span><br><span class="line">                sys.stdout.write(<span class="string">&quot;\n&quot;</span>)</span><br><span class="line">            <span class="comment"># start new stream</span></span><br><span class="line">            stream.new_stream = True</span><br></pre></td></tr></table></figure>
+
+
+<blockquote>
+<p><strong>Related Article</strong></p>
+<p><a target="_blank" rel="noopener" href="https://medium.com/@a102302301_23985/transform-your-audio-files-with-ease-effortlessly-transcribe-and-translate-at-scale-with-google-732a4056d99d">Transform Your Audio Files with Ease: Effortlessly Transcribe and Translate at Scale with Google Cloud</a></p>
+<p><strong>Code Source on Github</strong></p>
+<p>✨  <a target="_blank" rel="noopener" href="https://github.com/mimi-030">Github</a>  ✨</p>
+<p>👉 <a href="https://mimi-030.github.io/categories/gallery/">check out my blog</a></p>
+</blockquote>
+
 </div> 
 
 <script>
